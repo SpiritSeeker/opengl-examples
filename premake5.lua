@@ -19,9 +19,9 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 IncludeDir = {}
 IncludeDir["GLFW"] = "OpenGL/vendor/GLFW/include"
+IncludeDir["GLEW"] = "OpenGL/vendor/GLEW/include"
 
 include "OpenGL/vendor/GLFW"
-
 
 project "OpenGL"
 	location "OpenGL"
@@ -40,12 +40,24 @@ project "OpenGL"
 	includedirs
 	{
 		"%{prj.name}/src",
-		"%{IncludeDir.GLFW}"
+		"%{IncludeDir.GLFW}",
+		"%{IncludeDir.GLEW}"
+	}
+
+	libdirs
+	{
+		"OpenGL/vendor/GLEW/lib"
 	}
 
 	links
 	{
-		"GLFW"
+		"GLFW",
+		"GLEW:static"
+	}
+
+	defines
+	{
+		"GLEW_STATIC"
 	}
 
 	filter "system:linux"
