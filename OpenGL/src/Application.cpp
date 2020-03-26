@@ -122,6 +122,8 @@ int main(void)
 
   glfwMakeContextCurrent(window);
 
+  glfwSwapInterval(1);
+
   if (glewInit() != GLEW_OK)
     std::cout << "Error!" << std::endl;
 
@@ -157,12 +159,29 @@ int main(void)
   unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
   GLCall(glUseProgram(shader));
 
+  int location;
+  GLCall(location = glGetUniformLocation(shader, "u_Color"));
+  ASSERT(location != -1);
+  GLCall(glUniform4f(location, 0.0f, 0.5f, 0.9f, 1.0f));
+
+  float r = 0.0f;
+  float increment = 0.05f;
   while (!glfwWindowShouldClose(window))
   {
     // Render here
     GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
+    // Uniforms are set per draw.
+    // Cannot draw one triangle in one color and the other in a different color with the current setup.
+    GLCall(glUniform4f(location, r, 0.5f, 0.9f, 1.0f));
     GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+
+    if (r > 1.0f)
+      increment = -0.05f;
+    if (r < 0.0f)
+      increment = 0.05f;
+
+    r += increment;
 
     glfwSwapBuffers(window);
 
