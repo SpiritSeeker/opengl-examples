@@ -20,6 +20,7 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 IncludeDir = {}
 IncludeDir["GLFW"] = "OpenGL/vendor/GLFW/include"
 IncludeDir["GLEW"] = "OpenGL/vendor/GLEW/include"
+IncludeDir["stb_image"] = "OpenGL/vendor/stb_image"
 
 include "OpenGL/vendor/GLFW"
 
@@ -34,14 +35,17 @@ project "OpenGL"
 	files
 	{
 		"%{prj.name}/src/**.h",
-		"%{prj.name}/src/**.cpp"
+		"%{prj.name}/src/**.cpp",
+		"%{prj.name}/vendor/stb_image/**.h",
+		"%{prj.name}/vendor/stb_image/**.cpp"
 	}
 
 	includedirs
 	{
 		"%{prj.name}/src",
 		"%{IncludeDir.GLFW}",
-		"%{IncludeDir.GLEW}"
+		"%{IncludeDir.GLEW}",
+		"%{IncludeDir.stb_image}"
 	}
 
 	libdirs
