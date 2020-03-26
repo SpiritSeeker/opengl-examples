@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 
+// -------------------------- GL Error Logging --------------------------
 #include <signal.h>
 
 #define ASSERT(x) if (!(x)) raise(SIGTRAP);
@@ -26,7 +27,9 @@ static bool GLLogCall(const char* function, const char* file, int line)
   }
   return true;
 }
+// ----------------------------------------------------------------------
 
+// ------------------- Shader Compilation and Loading -------------------
 struct ShaderProgramSource
 {
   std::string VertexSource;
@@ -105,9 +108,11 @@ static unsigned int CreateShader(const std::string& vertexShader, const std::str
 
   return program;
 }
+// ----------------------------------------------------------------------
 
 int main(void)
 {
+  // --------------------- Initialize GLFW and GLEW ---------------------
   GLFWwindow* window;
 
   if (!glfwInit())
@@ -122,13 +127,17 @@ int main(void)
 
   glfwMakeContextCurrent(window);
 
+  // Set glfwSwapBuffers to run once per frame render.
+  // Implies, set FPS = max supported FPS
   glfwSwapInterval(1);
 
   if (glewInit() != GLEW_OK)
     std::cout << "Error!" << std::endl;
 
   std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
+  // --------------------------------------------------------------------
 
+  // -------------------- Data to be sent to the GPU --------------------
   float positions[] = {
     -0.5f, -0.5f,  // 0
      0.5f, -0.5f,  // 1
@@ -141,7 +150,9 @@ int main(void)
     0, 1, 2,
     2, 3, 0
   };
+  // --------------------------------------------------------------------
 
+  // ----------- Creating Buffers and storing the above data ------------
   unsigned int buffer;
   GLCall(glGenBuffers(1, &buffer));
   GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer));
@@ -154,21 +165,25 @@ int main(void)
   GLCall(glGenBuffers(1, &ibo));
   GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
   GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * 2 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
+  // --------------------------------------------------------------------
 
+  // --------------------------- Load Shaders ---------------------------
   ShaderProgramSource source = ParseShader("OpenGL/res/shaders/Basic.shader");
   unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
   GLCall(glUseProgram(shader));
+  // --------------------------------------------------------------------
 
+  // --------------------------- Set Uniforms ---------------------------
   int location;
   GLCall(location = glGetUniformLocation(shader, "u_Color"));
   ASSERT(location != -1);
   GLCall(glUniform4f(location, 0.0f, 0.5f, 0.9f, 1.0f));
 
+  // Variables to change Uniforms
   float r = 0.0f;
   float increment = 0.05f;
   while (!glfwWindowShouldClose(window))
   {
-    // Render here
     GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
     // Uniforms are set per draw.
@@ -187,9 +202,8 @@ int main(void)
 
     glfwPollEvents();
   }
-
+  // Cleanup
   GLCall(glDeleteProgram(shader));
-
   glfwTerminate();
   return 0;
 }
