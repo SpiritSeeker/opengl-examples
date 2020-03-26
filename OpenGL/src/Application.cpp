@@ -118,6 +118,10 @@ int main(void)
   if (!glfwInit())
     return -1;
 
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
   window = glfwCreateWindow(640, 480, "Hello World!", NULL, NULL);
   if (!window)
   {
@@ -152,7 +156,13 @@ int main(void)
   };
   // --------------------------------------------------------------------
 
-  // ----------- Creating Buffers and storing the above data ------------
+  // ---------------------- Creating Vertex Array -----------------------
+  unsigned int vao;    // Vertex Array Object
+  GLCall(glGenVertexArrays(1, &vao));
+  GLCall(glBindVertexArray(vao));
+  // --------------------------------------------------------------------
+
+  // -------- Creating Vertex Buffers and storing the above data --------
   unsigned int buffer;
   GLCall(glGenBuffers(1, &buffer));
   GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer));
@@ -160,7 +170,10 @@ int main(void)
 
   GLCall(glEnableVertexAttribArray(0));
   GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0));
+  // --------------------------------------------------------------------
 
+  // -------- Creating Index Buffers and storing the above data ---------
+  // Tip: Index Buffers can also be bound to vao before doing glVertexAttribPointer
   unsigned int ibo;   // Index Buffer Object
   GLCall(glGenBuffers(1, &ibo));
   GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
@@ -178,6 +191,14 @@ int main(void)
   GLCall(location = glGetUniformLocation(shader, "u_Color"));
   ASSERT(location != -1);
   GLCall(glUniform4f(location, 0.0f, 0.5f, 0.9f, 1.0f));
+  // --------------------------------------------------------------------
+
+  // ------------------------ Unbind everything -------------------------
+  GLCall(glBindVertexArray(0));
+  GLCall(glUseProgram(0));
+  GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+  GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+  // --------------------------------------------------------------------
 
   // Variables to change Uniforms
   float r = 0.0f;
@@ -186,9 +207,13 @@ int main(void)
   {
     GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
-    // Uniforms are set per draw.
-    // Cannot draw one triangle in one color and the other in a different color with the current setup.
+    // Bind everything before drawing (in case stuff changed)
+    GLCall(glUseProgram(shader));
     GLCall(glUniform4f(location, r, 0.5f, 0.9f, 1.0f));
+
+    GLCall(glBindVertexArray(vao));
+    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
+
     GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
 
     if (r > 1.0f)
