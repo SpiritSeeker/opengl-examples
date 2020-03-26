@@ -5,29 +5,10 @@
 #include <fstream>
 #include <sstream>
 
-// -------------------------- GL Error Logging --------------------------
-#include <signal.h>
+#include "Renderer.h"
 
-#define ASSERT(x) if (!(x)) raise(SIGTRAP);
-#define GLCall(x) GLClearError();\
-  x;\
-  ASSERT(GLLogCall(#x, __FILE__, __LINE__))
-
-static void GLClearError()
-{
-  while (glGetError() != GL_NO_ERROR);
-}
-
-static bool GLLogCall(const char* function, const char* file, int line)
-{
-  while (GLenum error = glGetError())
-  {
-    std::cout << "[OpenGL Error] (" << std::hex << error << std::dec << "): " << function << " " << file << ": " << line << std::endl;
-    return false;
-  }
-  return true;
-}
-// ----------------------------------------------------------------------
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
 
 // ------------------- Shader Compilation and Loading -------------------
 struct ShaderProgramSource
@@ -163,10 +144,7 @@ int main(void)
   // --------------------------------------------------------------------
 
   // -------- Creating Vertex Buffers and storing the above data --------
-  unsigned int buffer;
-  GLCall(glGenBuffers(1, &buffer));
-  GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer));
-  GLCall(glBufferData(GL_ARRAY_BUFFER, 4 * 2 * sizeof(float), positions, GL_STATIC_DRAW));
+  VertexBuffer vb(positions, 4 * 2 * sizeof(float));
 
   GLCall(glEnableVertexAttribArray(0));
   GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0));
@@ -174,10 +152,7 @@ int main(void)
 
   // -------- Creating Index Buffers and storing the above data ---------
   // Tip: Index Buffers can also be bound to vao before doing glVertexAttribPointer
-  unsigned int ibo;   // Index Buffer Object
-  GLCall(glGenBuffers(1, &ibo));
-  GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
-  GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * 2 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
+  IndexBuffer ib(indices, 6);
   // --------------------------------------------------------------------
 
   // --------------------------- Load Shaders ---------------------------
@@ -212,7 +187,7 @@ int main(void)
     GLCall(glUniform4f(location, r, 0.5f, 0.9f, 1.0f));
 
     GLCall(glBindVertexArray(vao));
-    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
+    ib.Bind();
 
     GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
 
